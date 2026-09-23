@@ -110,3 +110,6 @@ pnpm test:d7.5      # D7.5 agent-to-agent comms
 pnpm test:d8        # D8  milestone-A full chain
 ```
 
+## 5 · Others:
+
+If you want to develop this project, feel free to concat me.
