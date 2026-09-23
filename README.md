@@ -16,8 +16,6 @@ The shape of a working session: **one brain agent decomposes a complex undertaki
   <img src="docs/multi-agent.png" alt="Working-session flow (drawn by the author): human operator → master brain → specialist agents → human approval → finished" width="880">
 </p>
 
-*Vector source: [docs/multi-agent.pdf](docs/multi-agent.pdf).*
-
 
 One rule stays constant in that picture: **nothing finishes on the agents' say-so** — the brain checks the work, and only your approval closes a task. And every agent, brain included, stays within your reach — steerable directly by your prompt at any moment.
 
