@@ -1,0 +1,28 @@
+{
+  "name": "@maw/gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dev": "node ../../scripts/gateway-supervisor.mjs",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "2.0.75",
+    "@maw/shared": "workspace:*",
+    "ai": "6.0.280",
+    "better-sqlite3": "13.0.3",
+    "simple-git": "3.36.0",
+    "ws": "8.21.3",
+    "zod": "4.6.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "^22",
+    "@types/ws": "8.18.1",
+    "tsx": "4.23.13",
+    "typescript": "7.0.2"
+  }
+}

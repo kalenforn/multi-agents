@@ -1,0 +1,21 @@
+packages:
+  - "packages/*"
+
+# native modules we build ourselves — reviewed 2026-09: better-sqlite3 (our DB)
+# and esbuild (tsx's transpiler). Nothing else may run install scripts.
+onlyBuiltDependencies:
+  - better-sqlite3
+  - esbuild
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+minimumReleaseAgeExclude:
+  - react-dom@19.3.0
+  - react@19.3.0
+  - scheduler@0.28.0
+  - '@ai-sdk/gateway@3.0.191'
+  - '@ai-sdk/openai-compatible@2.0.75 || 3.0.47'
+  - '@ai-sdk/provider-utils@4.0.51 || 5.0.39'
+  - '@ai-sdk/provider@3.0.16 || 4.0.13'
+  - ai@6.0.280
+  - zod@4.6.1

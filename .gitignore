@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.next/
+out/
+
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# runtime state
+data/
+plans/
+worktrees/
+*.log
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+tsconfig.tsbuildinfo
+.multi-agent/
+.current-project
+.known-projects.json

@@ -1,0 +1,405 @@
+<title>Multi-Agent Workbench 架构评审</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #F2F4F3;
+    --surface: #FFFFFF;
+    --ink: #17232A;
+    --muted: #5A6B72;
+    --accent: #0E7C86;
+    --accent-soft: #E0EFF0;
+    --warn: #C2701C;
+    --line: #D9E0DE;
+    --paper: #FBFCFB;          /* drawing sheets stay light in both themes */
+    --paper-ink: #1B2B33;
+    --paper-line: #C9D3D0;
+    --paper-tab: #0E7C86;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E161A;
+      --surface: #152126;
+      --ink: #E3EBEC;
+      --muted: #8FA1A7;
+      --accent: #3FBAC4;
+      --accent-soft: #123236;
+      --warn: #E0A458;
+      --line: #263640;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E161A;
+    --surface: #152126;
+    --ink: #E3EBEC;
+    --muted: #8FA1A7;
+    --accent: #3FBAC4;
+    --accent-soft: #123236;
+    --warn: #E0A458;
+    --line: #263640;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 15px/1.75 "IBM Plex Sans", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 48px 24px 96px; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .eyebrow {
+    font: 600 12px/1 "IBM Plex Mono", monospace;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(28px, 4.6vw, 38px); font-weight: 600; line-height: 1.25;
+    margin: 0 0 10px; text-wrap: balance; letter-spacing: -0.01em;
+  }
+  .lede { color: var(--muted); margin: 0 0 22px; max-width: 68ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 40px; }
+  .chip {
+    font: 500 12px/1 "IBM Plex Mono", monospace;
+    color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 12px; letter-spacing: 0.02em;
+  }
+  .chip b { color: var(--accent); font-weight: 600; }
+  h2 {
+    font-size: 20px; font-weight: 600; margin: 56px 0 6px;
+    display: flex; align-items: baseline; gap: 12px; text-wrap: balance;
+  }
+  h2 .no { font: 600 13px/1 "IBM Plex Mono", monospace; color: var(--accent); letter-spacing: 0.08em; }
+  .sec-note { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; max-width: 70ch; }
+  ol.inv { margin: 0 0 8px; padding: 0; list-style: none; counter-reset: inv; }
+  ol.inv li {
+    counter-increment: inv; display: flex; gap: 14px;
+    padding: 12px 4px; border-bottom: 1px solid var(--line); align-items: baseline;
+  }
+  ol.inv li::before {
+    content: counter(inv, decimal-leading-zero);
+    font: 600 12px/1.6 "IBM Plex Mono", monospace; color: var(--accent); min-width: 2em;
+  }
+  ol.inv b { font-weight: 600; }
+  .sheet {
+    background: var(--paper); color: var(--paper-ink);
+    border: 1px solid var(--paper-line); border-radius: 8px;
+    padding: 30px 22px 18px; margin: 0 0 14px; position: relative;
+  }
+  .sheet-tag {
+    position: absolute; top: -1px; left: 18px;
+    background: var(--paper-tab); color: #FBFCFB;
+    font: 600 11px/1 "IBM Plex Mono", monospace; letter-spacing: 0.12em;
+    padding: 6px 10px; border-radius: 0 0 7px 7px;
+  }
+  .sheet .scroll { overflow-x: auto; }
+  .sheet pre.mermaid { display: flex; justify-content: center; margin: 0; }
+  .points { margin: 10px 0 0; padding: 0; list-style: none; }
+  .points li {
+    font-size: 13.5px; color: var(--muted); padding: 5px 0 5px 18px; position: relative;
+  }
+  .points li::before { content: "—"; position: absolute; left: 0; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 10px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 600 12px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase; }
+  td.no-col { font-family: "IBM Plex Mono", monospace; color: var(--accent); font-weight: 600; }
+  tr.crit td { background: color-mix(in srgb, var(--warn) 7%, transparent); }
+  .tbl-note { color: var(--muted); font-size: 12.5px; margin: 8px 0 0; }
+  ul.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .check-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+    transition: border-color .15s, background .15s;
+  }
+  .check-item:hover { border-color: var(--accent); }
+  .check-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .box {
+    flex: 0 0 auto; width: 20px; height: 20px; margin-top: 2px;
+    border: 2px solid var(--line); border-radius: 5px; position: relative;
+  }
+  .check-item.on { background: var(--accent-soft); border-color: var(--accent); }
+  .check-item.on .box { background: var(--accent); border-color: var(--accent); }
+  .check-item.on .box::after {
+    content: "✓"; position: absolute; inset: 0; color: var(--ground);
+    font: 700 13px/18px "IBM Plex Sans", sans-serif; text-align: center;
+  }
+  .check-item .label b { font-weight: 600; }
+  .check-item .label small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 1px; }
+  .check-item.on .label { color: var(--muted); }
+  .signoff {
+    margin-top: 22px; padding: 16px 18px; border-radius: 8px;
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    font-size: 13.5px;
+  }
+  footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+  footer code { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Architecture Review · Route C MVP · v1 待定稿</p>
+  <h1>Multi-Agent Workbench 架构评审</h1>
+  <p class="lede">Opus 5 只做拆解与审查，重活下放 GLM-5.3 / DeepSeek V4-Pro。下面 5 张图与《实施计划》一一对应——你逐图 check，通过即定稿（Revision 2）。</p>
+  <div class="meta">
+    <span class="chip">Master <b>Opus 5</b> · API-key</span>
+    <span class="chip">Workers <b>GLM-5.3 · DSV4</b></span>
+    <span class="chip">Gateway <b>Node 22 · 单进程</b></span>
+    <span class="chip">Store <b>SQLite WAL</b></span>
+    <span class="chip">前端 <b>Next.js 多页签</b></span>
+  </div>
+
+  <h2><span class="no">00</span>设计不变量</h2>
+  <p class="sec-note">看图前先认这 5 条——所有图都由它们推导出来，任何一条不认，架构就要重画。</p>
+  <ol class="inv">
+    <li><b>单 gateway 进程</b>——WS Hub / 编排 / 执行器管理 / 信箱同进程，MVP 不做分布式。</li>
+    <li><b>单写者 DB</b>——所有写经主线程写队列，任意时刻至多 1 个写者。</li>
+    <li><b>事件溯源</b>——一切输出先落 <span class="mono">events</span> 表（单调 seq），WS 只是广播层；恢复靠重放。</li>
+    <li><b>ExecutorAdapter 是唯一扩展点</b>——加 OpenCode / Aider / PTY 只加 adapter，不碰总线与 UI。</li>
+    <li><b>AG-UI 只当词汇表</b>——TS 类型本地持有，不硬依赖其 pre-1.0 运行时。</li>
+  </ol>
+
+  <h2><span class="no">A</span>系统组件图</h2>
+  <p class="sec-note">前端只经 1 条 WS 拿全部事件，按 agentId 分流到页签；模型端点与 worktree 只被 executor 层触碰。</p>
+  <div class="sheet"><span class="sheet-tag">SHEET A</span><div class="scroll">
+<pre class="mermaid">
+flowchart TB
+    subgraph WEB["packages/web · Next.js 前端"]
+        MV["Master 全局视图&lt;br/&gt;任务树 · 成本条 · 审批队列"]
+        TAB["Worker 页签 × N&lt;br/&gt;StreamView · InjectBox · InterruptBtn · ApprovalModal"]
+        HK["useAgentStream · useControl"]
+        MV --> HK
+        TAB --> HK
+    end
+    subgraph GW["packages/gateway · 单 Node 进程"]
+        HUB["ws/hub.ts&lt;br/&gt;WS Hub · 按 agentId 分发 · REPLAY"]
+        ORCH["orchestrator/master.ts&lt;br/&gt;Opus 5 拆解与审查循环"]
+        RT["orchestrator/router.ts&lt;br/&gt;模型档位规则 + 预算熔断"]
+        LG["orchestrator/ledger.ts&lt;br/&gt;成本台账"]
+        EM["ExecutorManager&lt;br/&gt;进程生命周期 · 五态状态机"]
+        MB["bus/mailbox.ts&lt;br/&gt;信箱投递 · 队列扫描"]
+        CE["executors/claude.ts&lt;br/&gt;Agent SDK"]
+        OE["executors/openai-compat.ts&lt;br/&gt;ai@6 ToolLoopAgent"]
+    end
+    DB[("SQLite · WAL&lt;br/&gt;tasks · messages · events · cost_ledger")]
+    WTS["git worktrees/&lt;br/&gt;每任务独立分支"]
+    APIS["模型端点&lt;br/&gt;Anthropic API · Opus 5 ｜ GLM-5.3 ｜ DeepSeek V4-Pro"]
+    HK &lt;--&gt;|"WS · AG-UI 事件词汇"| HUB
+    HUB --> ORCH
+    ORCH --> RT
+    ORCH --> MB
+    ORCH --> EM
+    RT --> LG
+    EM --> CE
+    EM --> OE
+    CE --> APIS
+    OE --> APIS
+    ORCH --> DB
+    MB --> DB
+    HUB --> DB
+    LG --> DB
+    CE --> WTS
+    OE --> WTS
+</pre>
+  </div></div>
+
+  <h2><span class="no">B</span>端到端任务生命周期</h2>
+  <p class="sec-note">审查循环是任务状态的唯一出口；人只在审批队列、页签干预、最终合并三处介入，绝不当搬运工。</p>
+  <div class="sheet"><span class="sheet-tag">SHEET B</span><div class="scroll">
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor H as 人类
+    participant UI as Web
+    participant Hu as WS Hub
+    participant M as Master / Opus 5
+    participant R as Router
+    participant W as Worker / GLM-5.3 或 DSV4
+    participant DB as SQLite
+    H->>UI: 提交自然语言目标
+    UI->>M: POST /api/tasks
+    M->>M: 拆解为任务树 JSON
+    M->>R: 复核 model_hint
+    R-->>M: 档位决策 glm53 / dsv4 / claude
+    M->>DB: tasks 入库 status=queued
+    loop 按依赖拓扑 dispatch
+        M->>W: spawn (worktree + spec)
+        W-->>Hu: 流式事件 (events 表 seq++)
+        Hu-->>UI: 实时推送 (agentId 路由到页签)
+        W->>DB: report 信箱消息
+        M->>DB: 消费 report
+        M->>M: Opus 审查 diff
+        alt 审查通过
+            M->>DB: status=done · 解锁下游
+        else 审查不过 且 attempts 少于 2
+            M->>W: re-dispatch + feedback
+        else 2 轮失败
+            M->>DB: status=awaiting_approval
+            Hu-->>UI: 推入审批队列
+            H->>UI: 人工裁决
+        end
+    end
+    M-->>UI: 汇总 diff · 人工 review 后合并
+</pre>
+  </div></div>
+
+  <h2><span class="no">C</span>执行器控制面与五态状态机</h2>
+  <p class="sec-note">两个执行器实现同一个 AgentHandle 接口，控制三件套语义一致；interrupt 2 秒未返回即标 error。</p>
+  <div class="sheet"><span class="sheet-tag">SHEET C-1</span><div class="scroll">
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --> idle : spawn
+    idle --> thinking : 收到任务 spec
+    thinking --> working : 开始工具调用
+    working --> awaiting_approval : canUseTool 触发
+    awaiting_approval --> working : approve allow
+    awaiting_approval --> idle : deny
+    working --> idle : 本轮完成
+    working --> error : interrupt 超时 2s / 端点 4xx 5xx
+    error --> [*] : kill
+    idle --> [*] : kill
+</pre>
+  </div></div>
+  <div class="sheet"><span class="sheet-tag">SHEET C-2</span><div class="scroll">
+<pre class="mermaid">
+flowchart LR
+    UI["Web 控件"] -->|"INJECT"| H["inject&lt;br/&gt;排队的后续消息"]
+    UI -->|"INTERRUPT"| I["interrupt&lt;br/&gt;2s 未返回则标 error"]
+    UI -->|"APPROVE"| A["canUseTool 决策&lt;br/&gt;allow / deny / edit"]
+    H --> E["executor 进程"]
+    I --> E
+    A --> E
+</pre>
+  </div></div>
+
+  <h2><span class="no">D</span>数据模型（ER）</h2>
+  <p class="sec-note">4 表同库同事务；events.seq 是重放与恢复的锚点；cost_ledger 直接支撑 D13 成本对比。</p>
+  <div class="sheet"><span class="sheet-tag">SHEET D</span><div class="scroll">
+<pre class="mermaid">
+erDiagram
+    tasks ||--o{ tasks : "parent_id"
+    tasks ||--o{ messages : "task_id"
+    tasks ||--o{ events : "task_id"
+    tasks ||--o{ cost_ledger : "task_id"
+    tasks {
+        string id PK
+        string parent_id FK
+        string title
+        string spec
+        string status
+        string assignee
+        string model_hint
+        string worktree_path
+        int attempts
+        int created_at
+        int updated_at
+    }
+    messages {
+        int id PK
+        string from_agent
+        string to_agent
+        string task_id FK
+        string type
+        string payload
+        int delivered
+        int read
+        int created_at
+    }
+    events {
+        int seq PK
+        string agent_id
+        string task_id
+        string event_type
+        string payload
+        int created_at
+    }
+    cost_ledger {
+        int id PK
+        string agent_id
+        string task_id
+        string model
+        int input_tokens
+        int output_tokens
+        int cache_read
+        int cache_write
+        float est_cost_usd
+        int created_at
+    }
+</pre>
+  </div></div>
+
+  <h2><span class="no">E</span>崩溃恢复</h2>
+  <p class="sec-note">kill -9 后重启：存活的 executor 直接 reattach，死了的回队重拉，事件从 sinceSeq+1 重放。</p>
+  <div class="sheet"><span class="sheet-tag">SHEET E</span><div class="scroll">
+<pre class="mermaid">
+flowchart TB
+    K["gateway 进程被 kill -9"] --> S1["重启 · 读 tasks / messages / events"]
+    S1 --> C{"executor 进程存活?"}
+    C -->|"PID + worktree 检测通过"| RA["reattach · 事件续流"]
+    C -->|"已死"| RQ["任务回队 queued · 重新 spawn"]
+    RA --> V["从 sinceSeq+1 重放&lt;br/&gt;单写者不变量不被破坏"]
+    RQ --> V
+    V --> OK["判据：0 任务丢失（D12 脚本验证）"]
+</pre>
+  </div></div>
+
+  <h2><span class="no">F</span>关键决策记录</h2>
+  <p class="sec-note">这 6 条是架构的“合同条款”——评审时重点确认，任何一条不同意都请在回复里点编号。</p>
+  <table>
+    <thead><tr><th>#</th><th>决策</th><th>理由</th><th>不同意的后果</th></tr></thead>
+    <tbody>
+      <tr><td class="no-col">1</td><td>WS 单通道 + AG-UI 词汇表</td><td>避免自发明协议；类型本地持有防绑定</td><td>换协议需重写前端事件层</td></tr>
+      <tr><td class="no-col">2</td><td>单写者 SQLite（WAL）</td><td>14 天内可交付的崩溃恢复最简路径</td><td>上量后迁 Postgres + pgmq（接口已预留）</td></tr>
+      <tr><td class="no-col">3</td><td>Claude 走 Agent SDK；GLM/DSV4 走 ai@6</td><td>各自控制面五要素零成本</td><td>Agent SDK 不可用时降级 headless CLI stream-json</td></tr>
+      <tr><td class="no-col">4</td><td>MVP 不引入 CCR</td><td>只有 2 条接入路径，自研 gateway 更透明</td><td>多 CLI 混编时再加 CCR adapter</td></tr>
+      <tr class="crit"><td class="no-col">5</td><td>仅 API-key 计费</td><td>Anthropic ToS 禁订阅 OAuth（2026-02 起）</td><td>违规封号，不可逆</td></tr>
+      <tr><td class="no-col">6</td><td>信箱模式 agent 间通信</td><td>抄 Claude Code mailbox 已验证结构</td><td>引入独立 MQ 则 MVP 复杂度超标</td></tr>
+    </tbody>
+  </table>
+  <p class="tbl-note">第 5 条是不可逆红线：任何“拿订阅账号做 worker”的捷径都不在方案内。</p>
+
+  <h2><span class="no">G</span>评审清单</h2>
+  <p class="sec-note">逐项点击勾选（只存在你本地浏览器里）；全部勾完回复“定稿”，我升 Revision 2 并开工 D1。</p>
+  <ul class="check" id="checklist">
+    <li class="check-item" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span class="label"><b>图 A 组件边界</b><small>gateway 单进程可接受？（vs. 独立 worker 进程池）</small></span></li>
+    <li class="check-item" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span class="label"><b>图 B 审查循环</b><small>自动 re-dispatch 上限 2 轮是否合适？（OPEN 项 3）</small></span></li>
+    <li class="check-item" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span class="label"><b>图 C 控制三件套</b><small>inject / interrupt / approve 语义是否覆盖你的干预需求</small></span></li>
+    <li class="check-item" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span class="label"><b>图 D 数据模型</b><small>4 表字段够用吗？缺什么现在加</small></span></li>
+    <li class="check-item" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span class="label"><b>图 E 崩溃恢复判据</b><small>“0 任务丢失”是否过严或过松</small></span></li>
+    <li class="check-item" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span class="label"><b>OPEN 项与 BLOCKED-ON</b><small>基准任务 / worker 阵容 / 重派轮数，以及三家 API key</small></span></li>
+  </ul>
+  <div class="signoff">评审通过后：<span class="mono">docs/ARCHITECTURE.md</span> 与 <span class="mono">plans/multi-agent-workbench-mvp/</span> 计划对升 <b>Revision 2</b>，架构即定稿基线；后续改动需回写文档并加 Revision 行。</div>
+
+  <footer>
+    源文件：<code>docs/ARCHITECTURE.md</code>（mermaid 源，进版本管理）｜计划：<code>plans/multi-agent-workbench-mvp/PLAN.md</code> + <code>PLAN.zh.md</code>（双语，parity OK）<br>
+    勾选状态仅存于本地浏览器，不会同步给任何人。
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: "default", securityLevel: "loose" }); }
+</script>
+<script>
+(function () {
+  var items = document.querySelectorAll("#checklist .check-item");
+  var KEY = "maw-arch-review-v1";
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; }
+  }
+  var state = loadState();
+  items.forEach(function (el, i) {
+    function toggle() {
+      state[i] = !state[i];
+      el.classList.toggle("on", !!state[i]);
+      el.setAttribute("aria-checked", state[i] ? "true" : "false");
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
+    }
+    if (state[i]) { el.classList.add("on"); el.setAttribute("aria-checked", "true"); }
+    el.addEventListener("click", toggle);
+    el.addEventListener("keydown", function (e) {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); }
+    });
+  });
+})();
+</script>

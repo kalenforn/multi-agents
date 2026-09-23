@@ -1,0 +1,44 @@
+{
+  "$comment": "Multi-Agent Workbench 运行配置（非密钥项）。密钥（GLM_API_KEY / DSV4_API_KEY 等）继续放 .env，不入库。同名 MAW_* 环境变量可覆盖本文件（.env > config.json > 默认值）。改完重启 gateway 生效。",
+  "server": {
+    "port": 8787
+  },
+  "paths": {
+    "$comment": "projectDir 为 null 时自动取 git 仓库根（即『当前目录』）；MAW_PROJECT_DIR env 可覆盖。一切产物都落在 <projectDir>/.multi-agent/ 下",
+    "projectDir": null,
+    "db": ".multi-agent/workbench.db",
+    "worktreeRoot": ".multi-agent/worktrees"
+  },
+  "orchestrator": {
+    "maxParallelWorkers": 2,
+    "maxRedispatch": 2,
+    "execTimeoutMs": 600000,
+    "spawnCap": 2,
+    "taskTokenCap": 500000,
+    "globalTokenCap": 5000000
+  },
+  "comms": {
+    "maxMsgChars": 12000,
+    "maxNoteChars": 12000
+  },
+  "executors": {
+    "claudeStream": {
+      "maxTurns": 200
+    },
+    "claudeHarness": {
+      "maxTurns": 60,
+      "runTimeoutMs": 900000,
+      "idleWindowMs": 1800000
+    },
+    "lite": {
+      "maxSteps": 20,
+      "cmdTimeoutMs": 30000,
+      "modelTimeoutMs": 300000
+    }
+  },
+  "dev": {
+    "orchestrate": false,
+    "fakeDecompose": false,
+    "devExecutor": null
+  }
+}

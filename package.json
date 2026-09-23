@@ -1,0 +1,31 @@
+{
+  "name": "multi-agent-workbench",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "dev": "pnpm --parallel --filter @maw/gateway --filter @maw/web dev",
+    "dev:gateway": "pnpm --filter @maw/gateway dev",
+    "dev:web": "pnpm --filter @maw/web dev",
+    "smoke": "tsx scripts/smoke-db.ts",
+    "test:d2": "tsx scripts/hub-replay-test.ts",
+    "test:d3:planner": "tsx scripts/d3-worker-test.ts planner",
+    "test:d3:worker": "tsx scripts/d3-worker-test.ts worker",
+    "test:d4:planner": "tsx scripts/d4-worker-test.ts planner",
+    "test:d4:worker": "tsx scripts/d4-worker-test.ts worker",
+    "test:d5": "tsx scripts/d5-control-test.ts",
+    "test:d6": "tsx scripts/d6-orchestrate-test.ts",
+    "test:d7": "tsx scripts/d7-review-test.ts",
+    "test:d7.5": "tsx scripts/d75-comm-test.ts",
+    "test:d7.6": "tsx scripts/d76-wake-test.ts",
+    "test:d8": "tsx scripts/d8-milestone-test.ts"
+  },
+  "devDependencies": {
+    "@maw/shared": "workspace:*",
+    "@types/ws": "8.18.1",
+    "tsx": "4.23.13",
+    "typescript": "7.0.2",
+    "ws": "8.21.3"
+  }
+}
